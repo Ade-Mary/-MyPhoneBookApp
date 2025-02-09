@@ -16,6 +16,7 @@ import java.util.List;
 @RequestMapping("/api/contacts")
 @RequiredArgsConstructor
 public class ContactController {
+
     private final ContactService contactService;
 
     // 1. Create a Contact
@@ -107,6 +108,20 @@ public class ContactController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/import")
+    public ResponseEntity<Void> importContacts(@RequestParam("file") MultipartFile file) {
+        contactService.importContactsFromCSV(file);
+        return ResponseEntity.ok().build();
+    }
+
+    // 13. Export Contacts to CSV
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportContacts() {
+        byte[] csvBytes = contactService.exportContactsToCSV();
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=contacts.csv")
+                .body(csvBytes);
+    }
 
 
 }

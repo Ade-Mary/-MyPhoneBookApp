@@ -5,6 +5,7 @@ import com.app.myphonebookapp.dto.ContactResponseDTO;
 import com.app.myphonebookapp.exception.ResourceNotFoundException;
 import com.app.myphonebookapp.model.Contact;
 import com.app.myphonebookapp.repository.ContactRepository;
+import com.app.myphonebookapp.util.CSVUtil;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -111,7 +113,17 @@ public class ContactService {
     }
 
 
+    // 12. Export Contacts to CSV
+    public byte[] exportContactsToCSV() {
+        List<Contact> contacts = contactRepository.findAll();
+        return CSVUtil.exportToCSV(contacts);
+    }
 
+    // 13. Import Contacts from CSV
+    public void importContactsFromCSV(MultipartFile file) {
+        List<Contact> contacts = CSVUtil.parseCSV(file);
+        contactRepository.saveAll(contacts);
+    }
 
 
     // Helper methods
