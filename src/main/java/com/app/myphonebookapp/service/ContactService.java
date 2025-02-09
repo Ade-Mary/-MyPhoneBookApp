@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class ContactService {
         contactRepository.deleteById(id);
     }
 
-    // In ContactService.java
+
     public ContactResponseDTO getContactById(Long id) {
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
@@ -90,6 +91,27 @@ public class ContactService {
     public List<String> getAllGroups () {
         return contactRepository.findAllDistinctGroups();
     }
+
+    public Page<ContactResponseDTO> getFavoriteContacts(
+            int page,
+            int size,
+            String sortBy,
+            String sortDir
+    ) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        PageRequest pageable = PageRequest.of(page, size, sort);
+        return contactRepository.findByFavoriteTrue(pageable).map(this::mapToDTO);
+    }
+
+    public void toggleFavorite(Long id) {
+        Contact contact = contactRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
+        contact.setFavorite(!contact.isFavorite());
+        contactRepository.save(contact);
+    }
+
+
+
 
 
     // Helper methods

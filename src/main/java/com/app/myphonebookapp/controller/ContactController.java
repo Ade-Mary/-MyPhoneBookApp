@@ -83,11 +83,30 @@ public class ContactController {
         return ResponseEntity.ok(contactService.getContactsByGroup(group, page, size, sortBy, sortDir));
     }
 
-    // 8. Get All Unique Groups
+    // Get All Unique Groups
     @GetMapping("/groups")
     public ResponseEntity<List<String>> getAllGroups() {
         return ResponseEntity.ok(contactService.getAllGroups());
     }
-    
+
+    // 10. Get Favorite Contacts
+    @GetMapping("/favorites")
+    public ResponseEntity<Page<ContactResponseDTO>> getFavoriteContacts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "firstName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        return ResponseEntity.ok(contactService.getFavoriteContacts(page, size, sortBy, sortDir));
+    }
+
+    //Toggle Favorite Status
+    @PutMapping("/{id}/favorite")
+    public ResponseEntity<Void> toggleFavorite(@PathVariable Long id) {
+        contactService.toggleFavorite(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
 
 }
