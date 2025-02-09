@@ -53,6 +53,41 @@ public class ContactController {
         return ResponseEntity.noContent().build();
     }
 
+    // 6. Get Single Contact by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<ContactResponseDTO> getContactById(@PathVariable Long id) {
+        return ResponseEntity.ok(contactService.getContactById(id));
+    }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<ContactResponseDTO>> searchContacts(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "firstName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        return ResponseEntity.ok(contactService.searchContacts(query, page, size, sortBy, sortDir));
+    }
+
+
+    // 9. Filter Contacts by Group (Paginated)
+    @GetMapping(params = "group")
+    public ResponseEntity<Page<ContactResponseDTO>> getContactsByGroup(
+            @RequestParam String group,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "firstName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        return ResponseEntity.ok(contactService.getContactsByGroup(group, page, size, sortBy, sortDir));
+    }
+
+    // 8. Get All Unique Groups
+    @GetMapping("/groups")
+    public ResponseEntity<List<String>> getAllGroups() {
+        return ResponseEntity.ok(contactService.getAllGroups());
+    }
+    
 
 }

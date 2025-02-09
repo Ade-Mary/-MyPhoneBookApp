@@ -12,6 +12,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ContactService {
@@ -48,6 +50,47 @@ public class ContactService {
         }
         contactRepository.deleteById(id);
     }
+
+    // In ContactService.java
+    public ContactResponseDTO getContactById(Long id) {
+        Contact contact = contactRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
+        return mapToDTO(contact);
+    }
+
+    public Page<ContactResponseDTO> searchContacts(
+            String query,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir
+    ) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        PageRequest pageable = PageRequest.of(page, size, sort);
+        return contactRepository.findByFirstNameContainingOrLastNameContainingOrEmailContainingOrPhoneNumberContaining(
+                query, query, query, query, pageable
+        ).map(this::mapToDTO);
+    }
+
+    // Filter Contacts by Group (Paginated)
+    public Page<ContactResponseDTO> getContactsByGroup(
+            String group,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir
+    ) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        PageRequest pageable = PageRequest.of(page, size, sort);
+        return contactRepository.findByGroup(group, pageable).map(this::mapToDTO);
+    }
+
+
+    // Get All Unique Groups
+    public List<String> getAllGroups () {
+        return contactRepository.findAllDistinctGroups();
+    }
+
 
     // Helper methods
     private Contact mapToEntity(ContactRequestDTO dto) {
@@ -87,4 +130,5 @@ public class ContactService {
         contact.setGroup(dto.getGroup());
         contact.setFavorite(dto.isFavorite());
     }
+
 }
