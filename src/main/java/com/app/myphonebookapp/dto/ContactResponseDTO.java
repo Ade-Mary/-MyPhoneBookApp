@@ -1,9 +1,6 @@
 package com.app.myphonebookapp.dto;
 
-
-
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
 @Builder

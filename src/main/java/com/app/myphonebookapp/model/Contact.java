@@ -3,16 +3,18 @@ package com.app.myphonebookapp.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
 @Table(indexes = {
         @Index(name = "idx_first_name", columnList = "firstName"),
         @Index(name = "idx_email", columnList = "email"),
         @Index(name = "idx_phone_number", columnList = "phoneNumber")
 })
+
 public class Contact {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
