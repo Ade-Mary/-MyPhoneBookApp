@@ -14,7 +14,6 @@ import lombok.*;
         @Index(name = "idx_email", columnList = "email"),
         @Index(name = "idx_phone_number", columnList = "phoneNumber")
 })
-
 public class Contact {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +33,11 @@ public class Contact {
 
     private String contactImage;
     private String physicalAddress;
-    private String group;
-    private boolean isFavorite;
+
+    @Column(name = "contact_group")
+    @Enumerated(EnumType.STRING)
+    private ContactGroup group;
+
+    @Column(name = "favorite")
+    private boolean favorite;
 }

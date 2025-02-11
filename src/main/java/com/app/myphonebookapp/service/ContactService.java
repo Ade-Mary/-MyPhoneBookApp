@@ -2,19 +2,21 @@ package com.app.myphonebookapp.service;
 
 import com.app.myphonebookapp.dto.ContactRequestDTO;
 import com.app.myphonebookapp.dto.ContactResponseDTO;
+import com.app.myphonebookapp.exception.DuplicateEntryException;
+import com.app.myphonebookapp.exception.NoContactsFoundException;
 import com.app.myphonebookapp.exception.ResourceNotFoundException;
 import com.app.myphonebookapp.model.Contact;
+import com.app.myphonebookapp.model.ContactGroup;
 import com.app.myphonebookapp.repository.ContactRepository;
 import com.app.myphonebookapp.util.CSVUtil;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -23,8 +25,17 @@ public class ContactService {
 
     private final ContactRepository contactRepository;
 
-    // Create
     public ContactResponseDTO createContact(ContactRequestDTO dto) {
+        if (contactRepository.existsByPhoneNumber(dto.getPhoneNumber())) {
+            throw new DuplicateEntryException("Phone number already exists");
+        }
+
+        if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
+            if (contactRepository.existsByEmail(dto.getEmail())) {
+                throw new DuplicateEntryException("Email already exists");
+            }
+        }
+
         Contact contact = mapToEntity(dto);
         contact = contactRepository.save(contact);
         return mapToDTO(contact);
@@ -54,7 +65,6 @@ public class ContactService {
         contactRepository.deleteById(id);
     }
 
-
     public ContactResponseDTO getContactById(Long id) {
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
@@ -70,9 +80,15 @@ public class ContactService {
     ) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageable = PageRequest.of(page, size, sort);
-        return contactRepository.findByFirstNameContainingOrLastNameContainingOrEmailContainingOrPhoneNumberContaining(
+        Page<Contact> contacts = contactRepository.findByFirstNameContainingOrLastNameContainingOrEmailContainingOrPhoneNumberContaining(
                 query, query, query, query, pageable
-        ).map(this::mapToDTO);
+        );
+
+        if (contacts.isEmpty()) {
+            throw new NoContactsFoundException("No contacts found matching the search query.");
+        }
+
+        return contacts.map(this::mapToDTO);
     }
 
     // Filter Contacts by Group (Paginated)
@@ -87,7 +103,6 @@ public class ContactService {
         PageRequest pageable = PageRequest.of(page, size, sort);
         return contactRepository.findByGroup(group, pageable).map(this::mapToDTO);
     }
-
 
     // Get All Unique Groups
     public List<String> getAllGroups () {
@@ -112,7 +127,6 @@ public class ContactService {
         contactRepository.save(contact);
     }
 
-
     // 12. Export Contacts to CSV
     public byte[] exportContactsToCSV() {
         List<Contact> contacts = contactRepository.findAll();
@@ -120,11 +134,10 @@ public class ContactService {
     }
 
     // 13. Import Contacts from CSV
-    public void importContactsFromCSV(MultipartFile file) {
+    public void importContactsFromCSV(MultipartFile file) throws IOException {
         List<Contact> contacts = CSVUtil.parseCSV(file);
         contactRepository.saveAll(contacts);
     }
-
 
     // Helper methods
     private Contact mapToEntity(ContactRequestDTO dto) {
@@ -135,8 +148,8 @@ public class ContactService {
                 .phoneNumber(dto.getPhoneNumber())
                 .contactImage(dto.getContactImage())
                 .physicalAddress(dto.getPhysicalAddress())
-                .group(dto.getGroup())
-                .isFavorite(dto.isFavorite())
+                .group(ContactGroup.valueOf(dto.getGroup().toUpperCase()))
+                .favorite(dto.isFavorite())
                 .build();
     }
 
@@ -149,7 +162,7 @@ public class ContactService {
                 .phoneNumber(contact.getPhoneNumber())
                 .contactImage(contact.getContactImage())
                 .physicalAddress(contact.getPhysicalAddress())
-                .group(contact.getGroup())
+                .group(contact.getGroup().name())
                 .isFavorite(contact.isFavorite())
                 .build();
     }
@@ -161,8 +174,7 @@ public class ContactService {
         contact.setPhoneNumber(dto.getPhoneNumber());
         contact.setContactImage(dto.getContactImage());
         contact.setPhysicalAddress(dto.getPhysicalAddress());
-        contact.setGroup(dto.getGroup());
+        contact.setGroup(ContactGroup.valueOf(dto.getGroup().toUpperCase()));
         contact.setFavorite(dto.isFavorite());
     }
-
 }

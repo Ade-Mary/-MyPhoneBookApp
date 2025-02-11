@@ -2,6 +2,7 @@ package com.app.myphonebookapp.controller;
 
 import com.app.myphonebookapp.dto.ContactRequestDTO;
 import com.app.myphonebookapp.dto.ContactResponseDTO;
+import com.app.myphonebookapp.model.ContactGroup;
 import com.app.myphonebookapp.service.ContactService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -36,7 +39,6 @@ public class ContactController {
     ) {
         return ResponseEntity.ok(contactService.getAllContacts(page, size, sortBy, sortDir));
     }
-
 
     // 4. Update a Contact
     @PutMapping("/{id}")
@@ -71,23 +73,23 @@ public class ContactController {
         return ResponseEntity.ok(contactService.searchContacts(query, page, size, sortBy, sortDir));
     }
 
-
     // 9. Filter Contacts by Group (Paginated)
     @GetMapping(params = "group")
     public ResponseEntity<Page<ContactResponseDTO>> getContactsByGroup(
-            @RequestParam String group,
+            @RequestParam ContactGroup group,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "firstName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
-        return ResponseEntity.ok(contactService.getContactsByGroup(group, page, size, sortBy, sortDir));
+        return ResponseEntity.ok(contactService.getContactsByGroup(group.name(), page, size, sortBy, sortDir));
     }
 
     // Get All Unique Groups
     @GetMapping("/groups")
     public ResponseEntity<List<String>> getAllGroups() {
-        return ResponseEntity.ok(contactService.getAllGroups());
+        List<String> groups = contactService.getAllGroups();
+        return ResponseEntity.ok(groups);
     }
 
     // 10. Get Favorite Contacts
@@ -109,7 +111,7 @@ public class ContactController {
     }
 
     @PostMapping("/import")
-    public ResponseEntity<Void> importContacts(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Void> importContacts(@RequestParam("file") MultipartFile file) throws IOException {
         contactService.importContactsFromCSV(file);
         return ResponseEntity.ok().build();
     }
@@ -122,6 +124,4 @@ public class ContactController {
                 .header("Content-Disposition", "attachment; filename=contacts.csv")
                 .body(csvBytes);
     }
-
-
 }
