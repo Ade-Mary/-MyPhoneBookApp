@@ -1,6 +1,7 @@
 package com.app.myphonebookapp.util;
 
 import com.app.myphonebookapp.model.Contact;
+import com.app.myphonebookapp.model.ContactGroup;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
@@ -47,8 +48,8 @@ public class CSVUtil {
                         .lastName(record.get("lastName"))
                         .email(record.get("email"))
                         .phoneNumber(record.get("phoneNumber"))
-                        .group(record.get("group"))
-                        .isFavorite(Boolean.parseBoolean(record.get("isFavorite")))
+                        .group(ContactGroup.valueOf(record.get("group")))
+                        .favorite(Boolean.parseBoolean(record.get("isFavorite")))
                         .build();
                 contacts.add(contact);
             });

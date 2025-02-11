@@ -10,7 +10,6 @@ import com.app.myphonebookapp.model.ContactGroup;
 import com.app.myphonebookapp.repository.ContactRepository;
 import com.app.myphonebookapp.util.CSVUtil;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -30,6 +29,7 @@ public class ContactService {
         if (contactRepository.existsByPhoneNumber(dto.getPhoneNumber())) {
             throw new DuplicateEntryException("Phone number already exists");
         }
+
         if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
             if (contactRepository.existsByEmail(dto.getEmail())) {
                 throw new DuplicateEntryException("Email already exists");
@@ -71,31 +71,50 @@ public class ContactService {
         return mapToDTO(contact);
     }
 
-    public Page<ContactResponseDTO> searchContacts(String query, int page, int size, String sortBy, String sortDir) {
+    public Page<ContactResponseDTO> searchContacts(
+            String query,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir
+    ) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageable = PageRequest.of(page, size, sort);
         Page<Contact> contacts = contactRepository.findByFirstNameContainingOrLastNameContainingOrEmailContainingOrPhoneNumberContaining(
                 query, query, query, query, pageable
         );
+
         if (contacts.isEmpty()) {
             throw new NoContactsFoundException("No contacts found matching the search query.");
         }
+
         return contacts.map(this::mapToDTO);
     }
 
     // Filter Contacts by Group (Paginated)
-    public Page<ContactResponseDTO> getContactsByGroup(String group, int page, int size, String sortBy, String sortDir) {
+    public Page<ContactResponseDTO> getContactsByGroup(
+            String group,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir
+    ) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageable = PageRequest.of(page, size, sort);
         return contactRepository.findByGroup(group, pageable).map(this::mapToDTO);
     }
 
     // Get All Unique Groups
-    public List<String> getAllGroups() {
+    public List<String> getAllGroups () {
         return contactRepository.findAllDistinctGroups();
     }
 
-    public Page<ContactResponseDTO> getFavoriteContacts(int page, int size, String sortBy, String sortDir) {
+    public Page<ContactResponseDTO> getFavoriteContacts(
+            int page,
+            int size,
+            String sortBy,
+            String sortDir
+    ) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         PageRequest pageable = PageRequest.of(page, size, sort);
         return contactRepository.findByFavoriteTrue(pageable).map(this::mapToDTO);
@@ -129,8 +148,8 @@ public class ContactService {
                 .phoneNumber(dto.getPhoneNumber())
                 .contactImage(dto.getContactImage())
                 .physicalAddress(dto.getPhysicalAddress())
-                .group(dto.getGroup())
-                .isFavorite(dto.isFavorite())
+                .group(ContactGroup.valueOf(dto.getGroup().toUpperCase()))
+                .favorite(dto.isFavorite())
                 .build();
     }
 
