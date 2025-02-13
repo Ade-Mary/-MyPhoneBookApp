@@ -46,5 +46,4 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 ## 📚 Postman API Documentation
 This project comes with a comprehensive Postman API documentation which can be accessed [here]
 
-(https://documenter.getpostman.com/view/36483828/2sAYXBFJzP).
-
+https://documenter.getpostman.com/view/36483828/2sAYXBFJzP
